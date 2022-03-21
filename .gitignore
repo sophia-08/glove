@@ -16,6 +16,7 @@
 *.lnp
 *.bak
 .DS_Store
+*.jlink
 *.emSession
 
 *.ini
