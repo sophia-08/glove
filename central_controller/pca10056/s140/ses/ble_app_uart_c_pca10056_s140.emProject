@@ -70,6 +70,10 @@
       <file file_name="$(SDK)/components/libraries/strerror/nrf_strerror.c" />
       <file file_name="$(SDK)/components/libraries/uart/retarget.c" />
       <file file_name="$(SDK)/components/libraries/atomic_flags/nrf_atflags.c" />
+      <file file_name="../../../../../components/libraries/usbd/app_usbd_core.c" />
+      <file file_name="../../../../../components/libraries/usbd/app_usbd_string_desc.c" />
+      <file file_name="../../../../../components/libraries/usbd/app_usbd.c" />
+      <file file_name="../../../../../components/libraries/usbd/class/audio/app_usbd_audio.c" />
     </folder>
     <folder Name="None">
       <file file_name="$(SDK)/modules/nrfx/mdk/ses_startup_nrf52840.s" />
@@ -88,6 +92,9 @@
       <file file_name="$(SDK)/modules/nrfx/drivers/src/prs/nrfx_prs.c" />
       <file file_name="$(SDK)/modules/nrfx/drivers/src/nrfx_uart.c" />
       <file file_name="$(SDK)/modules/nrfx/drivers/src/nrfx_uarte.c" />
+      <file file_name="../../../../../modules/nrfx/drivers/src/nrfx_usbd.c" />
+      <file file_name="../../../../../modules/nrfx/drivers/src/nrfx_power.c" />
+      <file file_name="../../../../../integration/nrfx/legacy/nrf_drv_power.c" />
     </folder>
     <folder Name="Board Support">
       <file file_name="$(SDK)/components/libraries/bsp/bsp.c" />
@@ -96,6 +103,8 @@
     <folder Name="Application">
       <file file_name="../../../main.c" />
       <file file_name="../config/sdk_config.h" />
+      <file file_name="../../../usb_midi.c" />
+      <file file_name="../../../app_usbd_midi.c" />
     </folder>
     <folder Name="nRF_Segger_RTT">
       <file file_name="$(SDK)/external/segger_rtt/SEGGER_RTT.c" />
