@@ -81,6 +81,10 @@ void twi_handler(nrf_drv_twi_evt_t const *p_event, void *p_context) {
 /**
  * @brief TWI initialization.
  */
+#ifdef BOARD_PCA10059
+#define ARDUINO_SCL_PIN 45
+#define ARDUINO_SDA_PIN 47
+#endif
 void twi_init(void) {
   ret_code_t err_code;
 

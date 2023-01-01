@@ -545,6 +545,12 @@ void uart_event_handle(app_uart_evt_t *p_event) {
 /**@brief  Function for initializing the UART module.
  */
 /**@snippet [UART Initialization] */
+#ifdef BOARD_PCA10059
+#define RX_PIN_NUMBER 27
+#define TX_PIN_NUMBER 7
+#define CTS_PIN_NUMBER 40
+#define RTS_PIN_NUMBER 35
+#endif
 static void uart_init(void) {
   uint32_t err_code;
   app_uart_comm_params_t const comm_params =
@@ -641,6 +647,8 @@ static void idle_state_handle(void) {
   }
 }
 
+
+int cc=0;
 void publish() {
   uint8_t data_array[5];
   uint8_t i;
@@ -655,9 +663,17 @@ void publish() {
     keys = keys << 2 | key[i];
   }
 
+  cc++;
+  if (cc %50 ==0) {
+    send_packet = true;
+  }else{
+   nrf_delay_ms(10);
+  }
+
+
   if (send_packet) {
     uint16_t length = 5;
-    data_array[0] = 0x00;
+    data_array[0] = 0x01;
     data_array[1] = keys;
     data_array[2] = (euler.h >> 5 & 0xff);
     data_array[3] = (euler.r >> 4 & 0xff);
@@ -680,7 +696,7 @@ int main(void) {
 
   // Initialize.
   uart_init();
-  log_init();
+//  log_init();
   timers_init();
   buttons_leds_init(&erase_bonds);
   power_management_init();
@@ -690,11 +706,11 @@ int main(void) {
   services_init();
   advertising_init();
   conn_params_init();
-  twi_init();
-  init_imu();
+//  twi_init();
+//  init_imu();
   //
 
-  saadc_init();
+//  saadc_init();
 
   // Start execution.
   printf("\r\nUART started.\r\n");
@@ -706,10 +722,10 @@ int main(void) {
 //    if (sample_rate % 20 == 0) 
     {
 
-      cal_state = BNO055_readCalStatus();
-      bno055_read_euler_hrp(&euler);
-//      printf("C:%x, H:%d, r%d, p%d ", cal_state, euler.h, euler.r, euler.p);
-//      printf("key %d %d %d %d\r\n", key[0], key[1], key[2], key[3]);
+//      cal_state = BNO055_readCalStatus();
+//      bno055_read_euler_hrp(&euler);
+      printf("C:%x, H:%d, r%d, p%d ", cal_state, euler.h, euler.r, euler.p);
+      printf("key %d %d %d %d\r\n", key[0], key[1], key[2], key[3]);
       //      NRF_LOG_FLUSH();
 
       publish();
