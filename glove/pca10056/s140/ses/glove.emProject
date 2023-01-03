@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="ble_app_uart_pca10056_s140" target="8" version="2">
-  <project Name="ble_app_uart_pca10056_s140">
+<solution Name="glove" target="8" version="2">
+  <project Name="gove">
     <configuration
       Name="Common"
       arm_architecture="v7EM"
