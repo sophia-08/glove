@@ -254,6 +254,11 @@ void usbd_user_ev_handler(app_usbd_event_type_t event) {
   }
 }
 
+void midi_send(uint8_t* msg, uint8_t len)  {
+app_usbd_midi_write(&m_app_midi, 0, msg, len);
+}
+
+
 void bsp_event_callback(bsp_event_t ev) {
 
   switch ((unsigned int)ev) {

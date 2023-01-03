@@ -200,12 +200,71 @@ static void db_disc_handler(ble_db_discovery_evt_t *p_evt) {
  * @details This function takes a list of characters of length data_len and prints the characters out on UART.
  *          If @ref ECHOBACK_BLE_UART_DATA is set, the data is sent back to sender.
  */
+
+void midi_send(uint8_t* msg, uint8_t len);
+
+uint8_t sent_key_left ;uint8_t sent_key_right ;
+uint8_t notes_righthand[5] = {60, 62, 64,65, 67};
+uint8_t notes_lefthand[5] = {69, 71, 72,74, 76};
+ // entry point of receive remote data.
 static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len) {
   ret_code_t ret_val;
 
-  NRF_LOG_DEBUG("Receiving data.");
-  NRF_LOG_HEXDUMP_DEBUG(p_data, data_len);
-  //    return;
+//  NRF_LOG_DEBUG("Receiving data.");
+//  NRF_LOG_HEXDUMP_DEBUG(p_data, data_len); 
+  uint8_t deviceId = p_data[0];
+  uint8_t keys = p_data[1];
+  NRF_LOG_DEBUG("%d, %x, %x", deviceId, keys, sent_key_right, sent_key_left);
+
+
+  if (deviceId == 0) {
+  // right hand
+    uint8_t i;
+
+    if (keys == sent_key_right) {
+      return;
+    }
+    for (i=0; i<5; i++ ) {
+      if ((keys & (1<<i)) != (sent_key_right & (1<<i))) {
+        if (keys & (1<<i)) {
+          //down
+          uint8_t message[3] = {0x90, notes_righthand[i], 50};
+          midi_send(message, sizeof(message));
+          NRF_LOG_DEBUG("press %d", notes_righthand[i]);
+        } else {
+            // release
+          uint8_t message[3] = {0x80, notes_righthand[i], 50};
+          midi_send(message, sizeof(message));
+          NRF_LOG_DEBUG("relese %d", notes_righthand[i]);
+        }
+      }
+    }
+    sent_key_right = keys;
+  }else{
+  //left hand
+    uint8_t i;
+
+    if (keys == sent_key_left) {
+      return;
+    }
+    for (i=0; i<5; i++ ) {
+      if ((keys & (1<<i)) != (sent_key_left & (1<<i))) {
+        if (keys & (1<<i)) {
+          //down
+          uint8_t message[3] = {0x90, notes_lefthand[i], 50};
+          midi_send(message, sizeof(message));
+          NRF_LOG_DEBUG("press %d", notes_lefthand[i]);
+        } else {
+            // release
+          uint8_t message[3] = {0x80, notes_lefthand[i], 50};
+          midi_send(message, sizeof(message));
+          NRF_LOG_DEBUG("relese %d", notes_lefthand[i]);
+        }
+      }
+    }
+    sent_key_left = keys;  }
+    
+  return;
 
   for (uint32_t i = 0; i < data_len; i++) {
     do {
@@ -308,7 +367,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t *p_ble_nus_c, ble_nus_c_evt_t cons
     NRF_LOG_INFO("Connected to device with Nordic UART Service.");
     break;
 
-  case BLE_NUS_C_EVT_NUS_TX_EVT:
+  case BLE_NUS_C_EVT_NUS_TX_EVT:  //receive data from remote
     ble_nus_chars_received_uart_print(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
     break;
 
