@@ -32,9 +32,12 @@
 #include "bno055.h"
 #include "nrf_delay.h"
 #include "nrf_drv_twi.h"
-
+#include "main.h"
 extern uint8_t key[10];
-#define THRESHOLD 150
+#define THRESHOLD 250  //150 for protype (0.7v at rest, 0.1 at full bend)
+
+
+int threshold[2][5] = {{356,352,369,367,360},{376,356,352,330,322}} ;
 
 static nrf_saadc_value_t adc_buf[2];
 
@@ -46,9 +49,11 @@ static nrf_saadc_value_t m_buffer_pool[2][SAMPLES_IN_BUFFER];
 static uint32_t m_adc_evt_counter;
 
 static uint8_t m_adc_channel_enabled;
-static nrf_saadc_channel_config_t channel_config[4];
+static nrf_saadc_channel_config_t channel_config[5];
 //static nrf_saadc_channel_config_t channel_1_config;
 //static nrf_saadc_channel_config_t channel_2_config;
+
+int tmp1;
 
 void saadc_callback(nrf_drv_saadc_evt_t const *p_event) {
   if (p_event->type == NRF_DRV_SAADC_EVT_DONE) {
@@ -61,12 +66,17 @@ void saadc_callback(nrf_drv_saadc_evt_t const *p_event) {
     4. covert
     */
 
-    key[m_adc_channel_enabled] = p_event->data.done.p_buffer[0] > THRESHOLD ? 0 : 1;
+  tmp1++;
+  if (tmp1 % 89 ==0) {
+   printf("%d, %d\r\n", m_adc_channel_enabled, p_event->data.done.p_buffer[0]);
+  }
+
+    key[m_adc_channel_enabled] = p_event->data.done.p_buffer[0] > threshold[HAND][m_adc_channel_enabled] - 50 ? 0 : 1;
 
     err_code = nrf_drv_saadc_channel_uninit(m_adc_channel_enabled);
     APP_ERROR_CHECK(err_code);
     m_adc_channel_enabled++;
-    if (m_adc_channel_enabled == 4) {
+    if (m_adc_channel_enabled == 5) {
       m_adc_channel_enabled = 0;
     }
     err_code = nrf_drv_saadc_channel_init(m_adc_channel_enabled, &channel_config[m_adc_channel_enabled]);
@@ -84,21 +94,22 @@ void saadc_init(void) {
 
   //set configuration for saadc channels
   uint8_t i;
-  for (i = 0; i < 4; i++) {
+  for (i = 0; i < 5; i++) {
 
     channel_config[i].resistor_p = NRF_SAADC_RESISTOR_DISABLED;
     channel_config[i].resistor_n = NRF_SAADC_RESISTOR_DISABLED;
     channel_config[i].gain = NRF_SAADC_GAIN1_6;
     channel_config[i].reference = NRF_SAADC_REFERENCE_INTERNAL;
-    channel_config[i].acq_time = NRF_SAADC_ACQTIME_3US;
+    channel_config[i].acq_time = NRF_SAADC_ACQTIME_40US;
     channel_config[i].mode = NRF_SAADC_MODE_SINGLE_ENDED;
     channel_config[i].pin_n = NRF_SAADC_INPUT_DISABLED;
   }
 
   channel_config[0].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN7);
-  channel_config[1].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN5);
-  channel_config[2].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN2);
-  channel_config[3].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN0);
+  channel_config[1].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN6);
+  channel_config[2].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN5);
+  channel_config[3].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN4);
+  channel_config[4].pin_p = (nrf_saadc_input_t)(NRF_SAADC_INPUT_AIN2);
 
   err_code = nrf_drv_saadc_init(NULL, saadc_callback);
   APP_ERROR_CHECK(err_code);

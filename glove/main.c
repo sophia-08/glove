@@ -74,6 +74,7 @@
 #if defined(UARTE_PRESENT)
 #include "nrf_uarte.h"
 #endif
+#include "main.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -655,29 +656,30 @@ void publish() {
   bool send_packet = false;
   uint8_t keys = 0;
   ret_code_t err_code;
-  for (i = 0; i < 4; i++) {
+  for (i = 0; i < 5; i++) {
     if (key[i] != key_sent[i]) {
       send_packet = true;
       key_sent[i] = key[i];
     }
-    keys = keys << 2 | key[i];
+    keys = keys << 1 | key[i];
   }
 
   cc++;
-  if (cc %50 ==0) {
+  if (cc %90000 ==0) {
     send_packet = true;
   }else{
-   nrf_delay_ms(10);
+//   nrf_delay_ms(50);
   }
 
 
   if (send_packet) {
     uint16_t length = 5;
-    data_array[0] = 0x01;
+    data_array[0] = HAND;
     data_array[1] = keys;
     data_array[2] = (euler.h >> 5 & 0xff);
     data_array[3] = (euler.r >> 4 & 0xff);
     data_array[4] = (euler.p >> 4 & 0xff);
+    printf("%x\r\n", keys);
 
     err_code = ble_nus_data_send(&m_nus, data_array, &length, m_conn_handle);
     if ((err_code != NRF_ERROR_INVALID_STATE) &&
@@ -710,7 +712,7 @@ int main(void) {
 //  init_imu();
   //
 
-//  saadc_init();
+  saadc_init();
 
   // Start execution.
   printf("\r\nUART started.\r\n");
@@ -724,8 +726,8 @@ int main(void) {
 
 //      cal_state = BNO055_readCalStatus();
 //      bno055_read_euler_hrp(&euler);
-      printf("C:%x, H:%d, r%d, p%d ", cal_state, euler.h, euler.r, euler.p);
-      printf("key %d %d %d %d\r\n", key[0], key[1], key[2], key[3]);
+//      printf("C:%x, H:%d, r%d, p%d ", cal_state, euler.h, euler.r, euler.p);
+//      printf("key %d %d %d %d\r\n", key[0], key[1], key[2], key[3]);
       //      NRF_LOG_FLUSH();
 
       publish();

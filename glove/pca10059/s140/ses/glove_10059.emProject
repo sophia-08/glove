@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
 <solution Name="glove_pca10059_s140" target="8" version="2">
-  <project Name="glove_pca10056_s140">
+  <project Name="glove_pca10059_s140">
     <configuration
       Name="Common"
       arm_architecture="v7EM"

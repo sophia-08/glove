@@ -89,8 +89,8 @@ void twi_init(void) {
   ret_code_t err_code;
 
   const nrf_drv_twi_config_t twi_config = {
-      .scl = ARDUINO_SCL_PIN,
-      .sda = ARDUINO_SDA_PIN,
+      .scl = 47, //ARDUINO_SCL_PIN, //27
+      .sda = 45, //ARDUINO_SDA_PIN,  //26
       .frequency = NRF_DRV_TWI_FREQ_100K,
       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
       .clear_bus_init = false};
