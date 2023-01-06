@@ -208,9 +208,9 @@ uint8_t sent_key_right;
 uint8_t notes_righthand[5] = {60, 62, 64, 65, 67};
 uint8_t notes_lefthand[5] = {69, 71, 72, 74, 76};
 typedef struct {
-  int8_t h;
-  int8_t r;
-  int8_t p;
+  int16_t h;
+  int16_t r;
+  int16_t p;
 } imu_euler_t;
 
 imu_euler_t right_euler;
@@ -220,7 +220,8 @@ typedef enum {
   INSTRUMENT_PIANO,
   INSTRUMENT_GUITAR,
   INSTRUMENT_TRUMPET,
-  INSTRUMENT_VIOLIN
+  INSTRUMENT_VIOLIN,
+  INSTRUMENT_FLUTE
 } instrument_t;
 
 instrument_t instrument;
@@ -239,20 +240,22 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
     // right hand
     uint8_t i;
 
-    right_euler.h = p_data[2];
-    right_euler.r = p_data[3];
-    right_euler.p = p_data[4];
+    right_euler.h = (int8_t)p_data[2];
+    right_euler.r = (int8_t)p_data[3];
+    right_euler.p = (int8_t)p_data[4];
 
     if (p_data[0] & 0x80) {
       // select key pressed
       if ((right_euler.r < 15 && right_euler.r > -15) && (right_euler.p < 15 && right_euler.p > -15)) {
         instrument = INSTRUMENT_PIANO;
-      } else if ((right_euler.r < 0x46 && right_euler.r > 0x26) && (right_euler.p < -50 && right_euler.p > -110)) {
+      } else if ((right_euler.r < 0x55 && right_euler.r > 0x25) && (right_euler.p < 26 && right_euler.p > -26)) {
         instrument = INSTRUMENT_GUITAR;
       } else if ((right_euler.r < 15 && right_euler.r > -15) && (right_euler.p < 0X50 && right_euler.p > 0X30)) {
         instrument = INSTRUMENT_TRUMPET;
-      } else if ((right_euler.r < 0X26 && right_euler.r > 0X16) && (right_euler.p < 15 && right_euler.p > -15)) {
+      } else if ((right_euler.r < 0X38 && right_euler.r > 0X16) && (right_euler.p < 40 && right_euler.p > 0)) {
         instrument = INSTRUMENT_VIOLIN;
+      } else if ((right_euler.r < 0X20 && right_euler.r > 0) && (right_euler.p < -70 && right_euler.p > -100)) {
+        instrument = INSTRUMENT_FLUTE;
       } else {
         instrument = INSTRUMENT_PIANO;
       }
