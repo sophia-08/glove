@@ -205,8 +205,8 @@ void midi_send(uint8_t *msg, uint8_t len);
 
 uint8_t sent_key_left;
 uint8_t sent_key_right;
-uint8_t notes_righthand[5] = {60, 62, 64, 65, 67};
-uint8_t notes_lefthand[5] = {69, 71, 72, 74, 76};
+//uint8_t notes_righthand[5] = {60, 62, 64, 65, 67};
+//uint8_t notes_lefthand[5] = {69, 71, 72, 74, 76};
 typedef struct {
   int16_t h;
   int16_t r;
@@ -215,6 +215,9 @@ typedef struct {
 
 imu_euler_t right_euler;
 imu_euler_t left_euler;
+
+uint8_t notes[7] = {60, 62, 64, 65, 67, 69, 71};
+uint8_t notes_sent[7];
 
 typedef enum {
   INSTRUMENT_PIANO,
@@ -225,6 +228,7 @@ typedef enum {
 } instrument_t;
 
 instrument_t instrument;
+int scale=0;
 
 // entry point of receive remote data.
 static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len) {
@@ -269,40 +273,60 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
       if ((keys & (1 << i)) != (sent_key_right & (1 << i))) {
         if (keys & (1 << i)) {
           //down
-          uint8_t message[3] = {0x90 | instrument, notes_righthand[i], 50};
+          uint8_t message[3] = {0x90 | instrument, notes[i]+scale, 50};
+          notes_sent[i] = notes[i]+scale;
           //  byte 1: bit0-3 channel id
           //  byte 2: note id
           //  byte 3: velocity
           midi_send(message, sizeof(message));
-          NRF_LOG_DEBUG("press %d", notes_righthand[i]);
+          NRF_LOG_DEBUG("press %d", notes[i]+scale);
         } else {
           // release
-          uint8_t message[3] = {0x80 | instrument, notes_righthand[i], 50};
+          uint8_t message[3] = {0x80 | instrument, notes_sent[i], 50};
           midi_send(message, sizeof(message));
-          NRF_LOG_DEBUG("relese %d", notes_righthand[i]);
+          NRF_LOG_DEBUG("relese %d", notes_sent[i]);
         }
       }
     }
     sent_key_right = keys;
   } else {
     //left hand
+
     uint8_t i;
+    if (keys & (1 << 4)) { //pinkie finger down
+      if (keys & (1 << 2)) { // both pinkie and middle down, scale -12
+        scale = -12; //
+      } else {
+        scale = -1; //Only pinkie down, scale - 1
+      }
+    //middle finger +1
+    }else if (keys & (1 << 2)) { //middle finger down
+      if (keys & (1 << 3)) { // both middle and noname down, scale +12
+        scale = 12; //
+      } else {
+        scale = 1; //Only middle down, scale + 1
+      }
+    } else {
+      scale =0;
+    }
+    NRF_LOG_DEBUG("octane %d", scale);
 
     if (keys == sent_key_left) {
       return;
     }
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 2; i++) {
       if ((keys & (1 << i)) != (sent_key_left & (1 << i))) {
         if (keys & (1 << i)) {
           //down
-          uint8_t message[3] = {0x90 | instrument, notes_lefthand[i], 50};
+          uint8_t message[3] = {0x90 | instrument, notes[i+5]+scale, 50};
+          notes_sent[i+5] = notes[i+5]+scale;
           midi_send(message, sizeof(message));
-          NRF_LOG_DEBUG("press %d", notes_lefthand[i]);
+          NRF_LOG_DEBUG("press %d", notes[i+5]+scale);
         } else {
           // release
-          uint8_t message[3] = {0x80 | instrument, notes_lefthand[i], 50};
+          uint8_t message[3] = {0x80 | instrument, notes_sent[i+5], 50};
           midi_send(message, sizeof(message));
-          NRF_LOG_DEBUG("relese %d", notes_lefthand[i]);
+          NRF_LOG_DEBUG("relese %d", notes_sent[i+5]);
         }
       }
     }
