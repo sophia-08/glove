@@ -679,7 +679,7 @@ void publish() {
   }
 
   cc++;
-  if (cc %900 ==0) {
+  if (cc % DELAY_LOOP ==0) {
     send_packet = true;
   }else{
 //   nrf_delay_ms(50);
