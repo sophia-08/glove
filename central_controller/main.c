@@ -269,7 +269,7 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
     if (keys == sent_key_right) {
       return;
     }
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 5; i++) {  // thumb, pointer, middle, ring, pinkie
       if ((keys & (1 << i)) != (sent_key_right & (1 << i))) {
         if (keys & (1 << i)) {
           //down
@@ -299,9 +299,8 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
       } else {
         scale = -1; //Only pinkie down, scale - 1
       }
-    //middle finger +1
     }else if (keys & (1 << 2)) { //middle finger down
-      if (keys & (1 << 3)) { // both middle and noname down, scale +12
+      if (keys & (1 << 3)) { // both middle and ring down, scale +12
         scale = 12; //
       } else {
         scale = 1; //Only middle down, scale + 1
