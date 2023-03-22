@@ -132,6 +132,7 @@ static ble_uuid_t m_adv_uuids[] =                                      /**< Univ
 struct bno055_euler_t euler;
 uint8_t key[10];
 uint8_t key_sent[10];
+bool  select_key_pressed; 
 
 /**@brief Function for assert macro callback.
  *
@@ -485,6 +486,10 @@ void bsp_event_handler(bsp_event_t event) {
     }
     break;
 
+  case BSP_EVENT_KEY_0:
+    printf("button %x\r\n", event);
+    select_key_pressed = true;
+
   default:
     break;
   }
@@ -656,6 +661,7 @@ void publish() {
   bool send_packet = false;
   uint8_t keys = 0;
   ret_code_t err_code;
+  uint8_t byte0;
   for (i = 0; i < 5; i++) {
     if (key[i] != key_sent[i]) {
       send_packet = true;
@@ -664,8 +670,16 @@ void publish() {
     keys = keys << 1 | key[i];
   }
 
+  if (select_key_pressed) {
+    select_key_pressed = false;
+    byte0 = HAND | 0x80;
+    send_packet = true;
+  }else{
+  byte0 = HAND;
+  }
+
   cc++;
-  if (cc %90000 ==0) {
+  if (cc %900 ==0) {
     send_packet = true;
   }else{
 //   nrf_delay_ms(50);
@@ -674,7 +688,7 @@ void publish() {
 
   if (send_packet) {
     uint16_t length = 5;
-    data_array[0] = HAND;
+    data_array[0] = byte0 ;
     data_array[1] = keys;
     data_array[2] = (euler.h >> 5 & 0xff);
     data_array[3] = (euler.r >> 4 & 0xff);
@@ -708,8 +722,8 @@ int main(void) {
   services_init();
   advertising_init();
   conn_params_init();
-//  twi_init();
-//  init_imu();
+  twi_init();
+  init_imu();
   //
 
   saadc_init();
@@ -724,9 +738,9 @@ int main(void) {
 //    if (sample_rate % 20 == 0) 
     {
 
-//      cal_state = BNO055_readCalStatus();
-//      bno055_read_euler_hrp(&euler);
-//      printf("C:%x, H:%d, r%d, p%d ", cal_state, euler.h, euler.r, euler.p);
+      cal_state = BNO055_readCalStatus();
+      bno055_read_euler_hrp(&euler);
+//      printf("C:%x, H:%d, r%d, p%d \r\n", cal_state, euler.h, euler.r, euler.p);
 //      printf("key %d %d %d %d\r\n", key[0], key[1], key[2], key[3]);
       //      NRF_LOG_FLUSH();
 
