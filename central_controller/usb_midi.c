@@ -254,28 +254,27 @@ void usbd_user_ev_handler(app_usbd_event_type_t event) {
   }
 }
 
-void midi_send(uint8_t* msg, uint8_t len)  {
-app_usbd_midi_write(&m_app_midi, 0, msg, len);
+void midi_send(uint8_t *msg, uint8_t len) {
+  app_usbd_midi_write(&m_app_midi, 0, msg, len);
 }
-
 
 void bsp_event_callback(bsp_event_t ev) {
 
   switch ((unsigned int)ev) {
   case BSP_EVENT_KEY_0: {
-    uint8_t message[3] = {0x91, 48, 50};
+    uint8_t message[3] = {0x91, 50, 50};
     app_usbd_midi_write(&m_app_midi, 0, message, sizeof(message));
     break;
   }
   case BTN_MIDI_KEY_0_RELEASE: {
-    uint8_t message[3] = {0x81, 48, 50};
+    uint8_t message[3] = {0x81, 50, 50};
     app_usbd_midi_write(&m_app_midi, 0, message, sizeof(message));
     break;
   }
   case BSP_EVENT_KEY_1:
   case BSP_EVENT_KEY_2:
   case BSP_EVENT_KEY_3: {
-    uint8_t message[3] = {0x91, 48, 50};
+    uint8_t message[3] = {0x81, 50, 50};
     app_usbd_midi_write(&m_app_midi, 0, message, sizeof(message));
     break;
   }
