@@ -216,29 +216,46 @@ typedef struct {
 imu_euler_t right_euler;
 imu_euler_t left_euler;
 
+int8_t nature_pos[8][4] = {
+{0x17,0x03,0xf3,0x05},  //piano
+{0x3d,0xe4,0xd4,0x5d},  //guitar
+{0x28,0xfd,0xe2,0x84},  //violin
+{0x05,0x39,0xea,0x2a},  //trumpet
+{0x03,0x2f,0xeb,0x2a},  //flute
+{0x14,0x40,0xf8,0x37},  //homorica
+{0x4b,0xaa,0xaa,0xaf},  //harp
+{0x16,0xe1,0xcc,0x58},  //cello
+};
+#define ERROR_POS 20
+
 uint8_t notes[7] = {60, 62, 64, 65, 67, 69, 71};
 uint8_t notes_sent[7];
 
 typedef enum {
   INSTRUMENT_PIANO,
   INSTRUMENT_GUITAR,
-  INSTRUMENT_TRUMPET,
   INSTRUMENT_VIOLIN,
-  INSTRUMENT_FLUTE
+    INSTRUMENT_TRUMPET,
+  INSTRUMENT_FLUTE,
+  INSTRUMENT_HOMORICA,
+  INSTRUMENT_HARP,
+  INSTRUMENT_CELLO
 } instrument_t;
 
 instrument_t instrument;
 int scale=0;
+
+
 
 // entry point of receive remote data.
 static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len) {
   ret_code_t ret_val;
 
   //  NRF_LOG_DEBUG("Receiving data.");
-  NRF_LOG_HEXDUMP_DEBUG(p_data, data_len);
+//  NRF_LOG_HEXDUMP_DEBUG(p_data, data_len);
   uint8_t deviceId = p_data[0] & 0x0f;
   uint8_t keys = p_data[1];
-  NRF_LOG_DEBUG("%d, %x, %x", deviceId, keys, sent_key_right, sent_key_left);
+//  NRF_LOG_DEBUG("%d, %x, %x", deviceId, keys, sent_key_right, sent_key_left);
 
   if (deviceId == 0) {
     // right hand
@@ -250,20 +267,31 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
 
     if (p_data[0] & 0x80) {
       // select key pressed
-      if ((right_euler.r < 15 && right_euler.r > -15) && (right_euler.p < 15 && right_euler.p > -15)) {
-        instrument = INSTRUMENT_PIANO;
-      } else if ((right_euler.r < 0x55 && right_euler.r > 0x25) && (right_euler.p < 26 && right_euler.p > -26)) {
-        instrument = INSTRUMENT_GUITAR;
-      } else if ((right_euler.r < 15 && right_euler.r > -15) && (right_euler.p < 0X50 && right_euler.p > 0X30)) {
-        instrument = INSTRUMENT_TRUMPET;
-      } else if ((right_euler.r < 0X38 && right_euler.r > 0X16) && (right_euler.p < 40 && right_euler.p > 0)) {
-        instrument = INSTRUMENT_VIOLIN;
-      } else if ((right_euler.r < 0X20 && right_euler.r > 0) && (right_euler.p < -70 && right_euler.p > -100)) {
-        instrument = INSTRUMENT_FLUTE;
-      } else {
-        instrument = INSTRUMENT_PIANO;
-      }
-      NRF_LOG_DEBUG("Select %d, right hand euler: %x, %x, %x", instrument, (uint8_t)right_euler.h, (uint8_t)right_euler.r, (uint8_t)right_euler.p);
+        int8_t i=0;
+        instrument = 0;
+        for (i=0; i<8; i++) {
+          if ( (abs(right_euler.r - nature_pos[i][0]) < ERROR_POS) &&
+                (abs(right_euler.p - nature_pos[i][1]) < ERROR_POS) &&
+                (abs(left_euler.r - nature_pos[i][2]) < ERROR_POS) &&
+                (abs(left_euler.p - nature_pos[i][3]) < ERROR_POS) )
+                instrument = i;
+        }
+
+//      if ((right_euler.r < 15 && right_euler.r > -15) && (right_euler.p < 15 && right_euler.p > -15)) {
+//        instrument = INSTRUMENT_PIANO;
+//      } else if ((right_euler.r < 0x55 && right_euler.r > 0x25) && (right_euler.p < 26 && right_euler.p > -26)) {
+//        instrument = INSTRUMENT_GUITAR;
+//      } else if ((right_euler.r < 15 && right_euler.r > -15) && (right_euler.p < 0X50 && right_euler.p > 0X30)) {
+//        instrument = INSTRUMENT_TRUMPET;
+//      } else if ((right_euler.r < 0X38 && right_euler.r > 0X16) && (right_euler.p < 40 && right_euler.p > 0)) {
+//        instrument = INSTRUMENT_VIOLIN;
+//      } else if ((right_euler.r < 0X20 && right_euler.r > 0) && (right_euler.p < -70 && right_euler.p > -100)) {
+//        instrument = INSTRUMENT_FLUTE;
+//      } else {
+//        instrument = INSTRUMENT_PIANO;
+//      }
+      NRF_LOG_DEBUG("Select %d, right hand euler: %x, %x, %x %x", instrument, (uint8_t)right_euler.r, (uint8_t)right_euler.p,(uint8_t)left_euler.r, (uint8_t)left_euler.p);
+//NRF_LOG_DEBUG("Select %d", instrument);
     }
 
     if (keys == sent_key_right) {
@@ -292,6 +320,10 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
   } else {
     //left hand
 
+    left_euler.h = (int8_t)p_data[2];
+    left_euler.r = (int8_t)p_data[3];
+    left_euler.p = (int8_t)p_data[4];
+
     uint8_t i;
     if (keys & (1 << 4)) { //pinkie finger down
       if (keys & (1 << 2)) { // both pinkie and middle down, scale -12
@@ -308,7 +340,7 @@ static void ble_nus_chars_received_uart_print(uint8_t *p_data, uint16_t data_len
     } else {
       scale =0;
     }
-    NRF_LOG_DEBUG("octane %d", scale);
+//    NRF_LOG_DEBUG("octane %d", scale);
 
     if (keys == sent_key_left) {
       return;
